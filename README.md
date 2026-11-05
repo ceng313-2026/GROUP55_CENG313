@@ -50,16 +50,33 @@ Due in the third week of December. It will build on the findings and baselines o
 
 ## Results
 
-Results of the Assignment 1 baselines (holdout Pearson and Kaggle late-submission scores) will be reported here once the notebook is in the repository.
+Baseline results (holdout Pearson and Kaggle late-submission scores) will be reported here once the baseline section of the notebook is in the repository.
+
+Main findings of the EDA (details and plots in the notebook):
+
+- The data is clean: no missing values, no constant columns, no duplicate timestamps. The minute grid is 99.8% complete
+  (273 gaps, 1,154 missing minutes, the longest 35 minutes).
+- `label` is heavy-tailed (kurtosis 16) and strongly autocorrelated (0.98 at 1 minute, 0.61 at 30 minutes, about 0 at 1 day),
+  so a shuffled split leaks the future. All validation is chronological.
+- The five market features and the imbalance ratios derived from them have almost no linear relation to the target (|Pearson| < 0.02).
+- The 780 `X` features are roughly standardized, individually weak (max |Pearson| 0.09) and highly redundant (113 pairs above 0.99).
+- Train and test are trivially separable (adversarial validation AUC 1.00). The separation is concentrated in a small group
+  of `X` features whose level shifts between the periods (`X772` alone reaches AUC 0.99, six features exceed 0.9), and test
+  volume is about 35% lower.
 
 ## How to run
 
-Dependencies are managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`).
+**Google Colab.** Open the notebook, run the first cell. It clones this repository, asks for your
+`kaggle.json` (Kaggle > Settings > API > Create New Token) and downloads the competition data.
+You must have accepted the competition rules on Kaggle.
+
+**Locally.** Dependencies are managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`).
 
 ```bash
 uv sync
 uv run kaggle competitions download -c drw-crypto-market-prediction -p data && unzip -o data/*.zip -d data
 uv run python tests/test_src.py
+uv run jupyter notebook assignment1_eda_baseline.ipynb
 ```
 
 Reusable code lives in `src/`: `data.py` (loading, column groups, chronological split),
@@ -71,3 +88,4 @@ on synthetic data.
 | Date | Work |
 |---|---|
 | 2026-11-04 | Repository structure, uv project, `src` modules (data loading, chronological split, baseline registry, metric), smoke test |
+| 2026-11-05 | EDA notebook: data quality, target behaviour, market and anonymized features, train/test drift, time patterns |
