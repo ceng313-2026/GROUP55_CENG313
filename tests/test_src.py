@@ -9,6 +9,7 @@ import pandas as pd
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.data import MARKET_COLS, TARGET, feature_columns, time_split, x_columns  # noqa: E402
+from src.eda import adversarial_validation, minute_grid, redundant_pairs  # noqa: E402
 from src.models import BASELINES  # noqa: E402
 from src.utils import pearson, write_submission  # noqa: E402
 
@@ -42,6 +43,19 @@ def main():
         score = pearson(val[TARGET], model.predict(val[feats]))
         expected_min = 0.0 if name == "constant_mean" else 0.5
         assert score >= expected_min, f"{name}: Pearson {score:.3f} below {expected_min}"
+
+    idx = pd.date_range("2023-03-01", periods=100, freq="min").delete([10, 11, 50])
+    coverage, sizes = minute_grid(idx)
+    assert coverage["missing"] == 3 and coverage["gaps"] == 2
+    assert coverage["longest_gap"] == pd.Timedelta(minutes=3) and sizes[pd.Timedelta(minutes=2)] == 1
+
+    pairs = redundant_pairs(df[["X1", "X2", "X3"]].assign(X1_copy=df["X1"] * 2))
+    assert pairs["|corr| > 0.99"] == 1, pairs.to_dict()
+
+    shifted = df.copy()
+    shifted["X2"] = shifted["X2"] + 5
+    auc, importances, single = adversarial_validation(df, shifted, feats, n_sample=500)
+    assert auc > 0.9 and single.index[0] == "X2"
 
     with tempfile.TemporaryDirectory() as d:
         sub = write_submission(val.index[:3], [0.0, 1.0, 2.0], os.path.join(d, "sub.csv"))

@@ -79,8 +79,9 @@ uv run python tests/test_src.py
 uv run jupyter notebook assignment1_eda_baseline.ipynb
 ```
 
-Reusable code lives in `src/`: `data.py` (loading, column groups, chronological split),
-`models.py` (baseline registry), `utils.py` (Pearson metric, submission writer). `tests/test_src.py` is a smoke test
+Reusable code lives in `src/`: `data.py` (loading, column groups, chronological split), `eda.py` (minute-grid
+coverage, feature redundancy, adversarial validation), `models.py` (baseline registry), `utils.py` (Pearson metric,
+submission writer). `tests/test_src.py` is a smoke test
 on synthetic data.
 
 ## Progress log
@@ -88,4 +89,4 @@ on synthetic data.
 | Date | Work |
 |---|---|
 | 2026-11-04 | Repository structure, uv project, `src` modules (data loading, chronological split, baseline registry, metric), smoke test |
-| 2026-11-05 | EDA notebook: data quality, target behaviour, market and anonymized features, train/test drift, time patterns |
+| 2026-11-05 | EDA notebook and `src/eda.py` helpers: data quality, target behaviour, market and anonymized features, train/test drift, time patterns |
