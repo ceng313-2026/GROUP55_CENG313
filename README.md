@@ -50,13 +50,15 @@ Due in the third week of December. It will build on the findings and baselines o
 
 ## Results
 
-| Model | Holdout Pearson |
-|---|---|
-| `constant_mean` | 0.0000 |
-| `ridge` | 0.0958 |
-| `lightgbm` | 0.0536 |
+| Model | Holdout Pearson | Kaggle public | Kaggle private |
+|---|---|---|---|
+| `constant_mean` | 0.0000 | 0.00000 | 0.00000 |
+| `ridge` | 0.0958 | 0.02441 | 0.04760 |
+| `lightgbm` | 0.0536 | 0.05259 | 0.03384 |
 
 Holdout is the last 20% of the training period (2023-12-18 to 2024-02-29), with the day before it dropped from the fit set.
+Kaggle scores are late submissions of the same models refit on the full training set. Ridge is the stronger baseline on the
+holdout and on the private score, LightGBM on the public score. Both stay below 0.1 Pearson, so the usable signal is weak.
 
 Main findings of the EDA (details and plots in the notebook):
 
@@ -68,7 +70,7 @@ Main findings of the EDA (details and plots in the notebook):
 - The 780 `X` features are roughly standardized, individually weak (max |Pearson| 0.09) and highly redundant (113 pairs above 0.99).
 - Train and test are trivially separable (adversarial validation AUC 1.00). The separation is concentrated in a small group
   of `X` features whose level shifts between the periods (`X772` alone reaches AUC 0.99, six features exceed 0.9), and test
-  volume is about 35% lower.
+  volume is about 35% lower. This regime change may be part of why holdout scores do not carry over one-to-one to Kaggle.
 
 ## How to run
 
@@ -96,4 +98,12 @@ on synthetic data.
 |---|---|
 | 2026-11-04 | Repository structure, uv project, `src` modules (data loading, chronological split, baseline registry, metric), smoke test |
 | 2026-11-05 | EDA notebook and `src/eda.py` helpers: data quality, target behaviour, market and anonymized features, train/test drift, time patterns |
-| 2026-11-06 | Baselines added to the notebook, holdout evaluation, results written up |
+| 2026-11-06 | Baselines added to the notebook, holdout evaluation, late submissions to Kaggle, results written up |
+
+## Kaggle submission history
+
+| Date | Submission | Public score | Private score | Status |
+|---|---|---|---|---|
+| 2026-11-06 | `constant_mean.csv`, Assignment 1 baseline | 0.00000 | 0.00000 | Complete (after deadline) |
+| 2026-11-06 | `lightgbm.csv`, Assignment 1 baseline | 0.05259 | 0.03384 | Complete (after deadline) |
+| 2026-11-06 | `ridge.csv`, Assignment 1 baseline | 0.02441 | 0.04760 | Complete (after deadline) |
