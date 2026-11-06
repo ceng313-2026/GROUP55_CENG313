@@ -50,7 +50,13 @@ Due in the third week of December. It will build on the findings and baselines o
 
 ## Results
 
-Baseline results (holdout Pearson and Kaggle late-submission scores) will be reported here once the baseline section of the notebook is in the repository.
+| Model | Holdout Pearson |
+|---|---|
+| `constant_mean` | 0.0000 |
+| `ridge` | 0.0958 |
+| `lightgbm` | 0.0536 |
+
+Holdout is the last 20% of the training period (2023-12-18 to 2024-02-29), with the day before it dropped from the fit set.
 
 Main findings of the EDA (details and plots in the notebook):
 
@@ -90,3 +96,4 @@ on synthetic data.
 |---|---|
 | 2026-11-04 | Repository structure, uv project, `src` modules (data loading, chronological split, baseline registry, metric), smoke test |
 | 2026-11-05 | EDA notebook and `src/eda.py` helpers: data quality, target behaviour, market and anonymized features, train/test drift, time patterns |
+| 2026-11-06 | Baselines added to the notebook, holdout evaluation, results written up |
