@@ -8,9 +8,11 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data import MARKET_COLS, TARGET, feature_columns, load_test, load_train, time_split, x_columns  # noqa: E402
+from src.data import (  # noqa: E402
+    MARKET_COLS, TARGET, feature_columns, feature_matrix, load_test, load_train, time_split, x_columns,
+)
 from src.eda import adversarial_validation, minute_grid, redundant_pairs  # noqa: E402
-from src.models import BASELINES  # noqa: E402
+from src.models import BASELINES, ChunkedStandardScaler  # noqa: E402
 from src.utils import pearson, write_submission  # noqa: E402
 
 
@@ -29,6 +31,10 @@ def main():
     assert x_columns(df) == ["X1", "X2", "X3"]
     assert TARGET not in feature_columns(df)
 
+    matrix = feature_matrix(df)
+    assert matrix.flags.c_contiguous and matrix.dtype == np.float32
+    assert np.array_equal(matrix, df[feature_columns(df)].to_numpy())
+
     fit, val = time_split(df)
     assert fit.index.max() < val.index.min(), "holdout must come after the fit period"
     assert val.index.min() - fit.index.max() > pd.Timedelta(hours=24), "embargo gap missing"
@@ -36,6 +42,13 @@ def main():
 
     assert pearson([1, 2, 3], [5, 5, 5]) == 0.0
     assert abs(pearson([1, 2, 3], [2, 4, 6]) - 1.0) < 1e-12
+
+    from sklearn.preprocessing import StandardScaler
+
+    stock, chunked = StandardScaler().fit(matrix), ChunkedStandardScaler(chunk_columns=3).fit(matrix)
+    for attr in ("mean_", "var_", "scale_"):
+        assert np.array_equal(getattr(stock, attr), getattr(chunked, attr)), attr
+    assert np.array_equal(stock.transform(matrix), chunked.transform(matrix))
 
     feats = feature_columns(df)
     for name, make in BASELINES.items():
@@ -49,7 +62,7 @@ def main():
     assert coverage["missing"] == 3 and coverage["gaps"] == 2
     assert coverage["longest_gap"] == pd.Timedelta(minutes=3) and sizes[pd.Timedelta(minutes=2)] == 1
 
-    pairs = redundant_pairs(df[["X1", "X2", "X3"]].assign(X1_copy=df["X1"] * 2))
+    pairs = redundant_pairs(df.assign(X1_copy=df["X1"] * 2), ["X1", "X2", "X3", "X1_copy"])
     assert pairs["|corr| > 0.99"] == 1, pairs.to_dict()
 
     shifted = df.copy()

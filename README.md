@@ -37,11 +37,14 @@ The 780 `X*` columns are proprietary DRW features with no documentation.
 - Anonymized features: correlation with the target, redundancy between features, drift between train and test.
 - Baselines evaluated on a **chronological** holdout (last 20% of the training period) with a one-day gap before it,
   never a shuffled split, because the target is a future price move and stays autocorrelated for about an hour.
+- Memory kept within a free Google Colab runtime: parquet files are read in column groups, feature matrices are
+  built once per split in row-major order, and ridge is solved by Cholesky in float64 (in float32 the Gram matrix of
+  these collinear features is not positive definite and scikit-learn falls back to a full SVD needing over 10 GB).
 
 | Baseline | Description |
 |---|---|
 | `constant_mean` | predicts the training mean (zero-information reference) |
-| `ridge` | standardized features, ridge regression |
+| `ridge` | standardized features, ridge regression (float64, Cholesky solver) |
 | `lightgbm` | gradient boosted trees on all features |
 
 ### Assignment 2: proposed solution (`assignment2_solution.ipynb`)

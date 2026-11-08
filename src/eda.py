@@ -22,9 +22,12 @@ def minute_grid(index: pd.DatetimeIndex):
     return summary, gaps.value_counts()
 
 
-def redundant_pairs(df: pd.DataFrame, thresholds=(0.95, 0.99), n_sample=50_000, random_state=0) -> pd.Series:
-    """Number of column pairs whose |correlation| exceeds each threshold, estimated on a row sample."""
-    sample = df.sample(min(n_sample, len(df)), random_state=random_state)
+def redundant_pairs(df: pd.DataFrame, columns, thresholds=(0.95, 0.99), n_sample=50_000, random_state=0) -> pd.Series:
+    """Number of column pairs whose |correlation| exceeds each threshold, estimated on a row sample.
+
+    Rows are sampled before columns are selected so the full frame is never copied.
+    """
+    sample = df.sample(min(n_sample, len(df)), random_state=random_state)[columns]
     corr = np.nan_to_num(np.corrcoef(sample.values.T.astype(np.float64)))
     upper = np.abs(corr[np.triu_indices_from(corr, k=1)])
     return pd.Series({f"|corr| > {t}": int((upper > t).sum()) for t in thresholds})
@@ -36,9 +39,9 @@ def adversarial_validation(train: pd.DataFrame, test: pd.DataFrame, features, n_
     Returns the classifier's holdout AUC, its LightGBM feature importances, and the AUC
     of each raw feature used alone as a score. AUC near 0.5 means the sets look alike.
     """
-    rows = pd.concat([
-        train[features].sample(n_sample, random_state=random_state),
-        test[features].sample(n_sample, random_state=random_state),
+    rows = pd.concat([  # rows first, then columns: avoids copying each full frame
+        train.sample(n_sample, random_state=random_state)[features],
+        test.sample(n_sample, random_state=random_state)[features],
     ])
     is_test = np.r_[np.zeros(n_sample), np.ones(n_sample)]
     x_fit, x_val, y_fit, y_val = train_test_split(rows, is_test, test_size=0.3, random_state=random_state)

@@ -53,6 +53,18 @@ def feature_columns(df: pd.DataFrame) -> list[str]:
     return [c for c in df.columns if c != TARGET]
 
 
+def feature_matrix(df: pd.DataFrame) -> np.ndarray:
+    """Features as a C-ordered float32 array.
+
+    pandas stores the frame column-major; scikit-learn and LightGBM both want row-major input
+    and would otherwise each make their own full copy during fit.
+    """
+    positions = [df.columns.get_loc(c) for c in feature_columns(df)]
+    out = np.empty((len(df), len(positions)), dtype=np.float32)
+    np.take(df.to_numpy(), positions, axis=1, out=out)
+    return out
+
+
 def x_columns(df: pd.DataFrame) -> list[str]:
     """The anonymized proprietary features X1, X2, ..."""
     return [c for c in df.columns if c.startswith("X")]
