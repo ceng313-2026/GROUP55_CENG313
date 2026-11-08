@@ -13,7 +13,8 @@ BASELINES = {
     # Predicts the training mean. Pearson is undefined for a constant prediction,
     # so this is the "zero information" reference point.
     "constant_mean": lambda: DummyRegressor(strategy="mean"),
-    "ridge": lambda: make_pipeline(StandardScaler(), Ridge(alpha=1.0)),
+    # copy_X=False: the scaler output is private to the pipeline, so ridge may centre it in place.
+    "ridge": lambda: make_pipeline(StandardScaler(), Ridge(alpha=1.0, copy_X=False)),
     "lightgbm": lambda: LGBMRegressor(
         n_estimators=500,
         learning_rate=0.03,
