@@ -74,11 +74,13 @@ Main findings of the EDA (details and plots in the notebook):
 
 ## How to run
 
-**Google Colab.** Open the notebook, run the first cell. It clones this repository, asks for your
-`kaggle.json` (Kaggle > Settings > API > Create New Token) and downloads the competition data.
-You must have accepted the competition rules on Kaggle.
+**Google Colab.** Open the notebook, run the first cell. It clones this repository, asks you to upload your
+Kaggle API credential (from Kaggle > Settings > API: either the `kaggle.json` file or a text file containing an API
+token) and downloads the competition data. You must have accepted the competition rules on Kaggle.
 
 **Locally.** Dependencies are managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`).
+
+The Kaggle CLI reads your credential from `~/.kaggle/kaggle.json` or `~/.kaggle/access_token`.
 
 ```bash
 uv sync
