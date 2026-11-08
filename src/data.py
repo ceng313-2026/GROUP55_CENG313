@@ -1,8 +1,10 @@
 """Loading and splitting the DRW Crypto Market Prediction data."""
+import json
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 COMPETITION = "drw-crypto-market-prediction"
 TARGET = "label"
@@ -12,13 +14,35 @@ MARKET_COLS = ["bid_qty", "ask_qty", "buy_qty", "sell_qty", "volume"]
 VALIDATION_FRACTION = 0.2
 
 
+# Columns are read in groups and cast into one preallocated float32 array. Each file is a single
+# parquet row group, so reading it whole decodes ~7 GB of float64 first, more than a free Colab
+# runtime has. Reading ~100 columns at a time keeps the peak near the size of the final frame.
+COLUMN_GROUP = 100
+
+
+def _read_index(pf: pq.ParquetFile) -> pd.Index:
+    spec = json.loads(pf.schema_arrow.metadata[b"pandas"])["index_columns"][0]
+    if isinstance(spec, dict):  # a RangeIndex is stored as metadata only (test: ID 1..n)
+        return pd.RangeIndex(spec["start"], spec["stop"], spec["step"], name=spec["name"])
+    return pd.Index(pf.read(columns=[spec]).column(0).to_pandas().values)
+
+
 def _load(path: Path) -> pd.DataFrame:
-    # float32 halves memory (train is ~3.8 GB as float64), which matters on Colab.
-    return pd.read_parquet(path).astype(np.float32)
+    pf = pq.ParquetFile(path)
+    names = [n for n in pf.schema_arrow.names if not n.startswith("__index_level_")]
+    values = np.empty((pf.metadata.num_rows, len(names)), dtype=np.float32, order="F")
+    for start in range(0, len(names), COLUMN_GROUP):
+        group = names[start : start + COLUMN_GROUP]
+        block = pf.read(columns=group)
+        for offset, name in enumerate(group):
+            values[:, start + offset] = block.column(name).to_numpy()
+        del block
+    return pd.DataFrame(values, index=_read_index(pf), columns=names)
 
 
 def load_train(data_dir) -> pd.DataFrame:
-    return _load(Path(data_dir) / "train.parquet").sort_index()
+    df = _load(Path(data_dir) / "train.parquet")
+    return df if df.index.is_monotonic_increasing else df.sort_index()
 
 
 def load_test(data_dir) -> pd.DataFrame:

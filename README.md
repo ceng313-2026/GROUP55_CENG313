@@ -89,7 +89,7 @@ uv run python tests/test_src.py
 uv run jupyter notebook assignment1_eda_baseline.ipynb
 ```
 
-Reusable code lives in `src/`: `data.py` (loading, column groups, chronological split), `eda.py` (minute-grid
+Reusable code lives in `src/`: `data.py` (memory-efficient loading, column groups, chronological split), `eda.py` (minute-grid
 coverage, feature redundancy, adversarial validation), `models.py` (baseline registry), `utils.py` (Pearson metric,
 submission writer). `tests/test_src.py` is a smoke test
 on synthetic data.

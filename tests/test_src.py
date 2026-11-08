@@ -8,7 +8,7 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.data import MARKET_COLS, TARGET, feature_columns, time_split, x_columns  # noqa: E402
+from src.data import MARKET_COLS, TARGET, feature_columns, load_test, load_train, time_split, x_columns  # noqa: E402
 from src.eda import adversarial_validation, minute_grid, redundant_pairs  # noqa: E402
 from src.models import BASELINES  # noqa: E402
 from src.utils import pearson, write_submission  # noqa: E402
@@ -59,7 +59,18 @@ def main():
 
     with tempfile.TemporaryDirectory() as d:
         sub = write_submission(val.index[:3], [0.0, 1.0, 2.0], os.path.join(d, "sub.csv"))
-    assert list(sub.columns) == ["ID", "prediction"]
+        assert list(sub.columns) == ["ID", "prediction"]
+
+        df.astype("float64").to_parquet(os.path.join(d, "train.parquet"))
+        test_df = df.astype("float64").reset_index(drop=True)
+        test_df[TARGET] = 0
+        test_df.index = pd.RangeIndex(1, len(df) + 1, name="ID")
+        test_df.to_parquet(os.path.join(d, "test.parquet"))
+
+        train_back, test_back = load_train(d), load_test(d)
+        assert train_back.equals(df) and train_back.index.equals(df.index)
+        assert (test_back.dtypes == "float32").all() and test_back.index.equals(test_df.index)
+        assert list(test_back.columns) == list(df.columns) and (test_back[TARGET] == 0).all()
     print("ok")
 
 
