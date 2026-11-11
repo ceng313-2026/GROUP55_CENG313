@@ -3,11 +3,23 @@
 Course project for CENG313 Introduction to Data Science, built on the Kaggle competition
 [DRW - Crypto Market Prediction](https://www.kaggle.com/competitions/drw-crypto-market-prediction).
 
+**Group ID: 55**
+
 ## Team
 
 | Name | Student ID | GitHub |
 |---|---|---|
 | Mehmet Efe ER | 24118080012 | [zreik-blanc](https://github.com/zreik-blanc) |
+
+## Notebooks
+
+| Assignment | Notebook | View |
+|---|---|---|
+| 1: EDA and baseline | [`assignment1_eda_baseline.ipynb`](assignment1_eda_baseline.ipynb) | [nbviewer](https://nbviewer.org/github/ceng313-2026/GROUP55_CENG313/blob/main/assignment1_eda_baseline.ipynb) · [Colab](https://colab.research.google.com/github/ceng313-2026/GROUP55_CENG313/blob/main/assignment1_eda_baseline.ipynb) |
+| 2: proposed solution | `assignment2_solution.ipynb` | due 30 December 2026 |
+
+**Current Kaggle score** (late submissions, the competition is closed): best private score **0.04760** (ridge),
+best public score **0.05259** (LightGBM). Screenshot in [`submissions/`](submissions).
 
 ## Competition
 
@@ -31,13 +43,13 @@ The 780 `X*` columns are proprietary DRW features with no documentation.
 
 ### Assignment 1: EDA and baselines (`assignment1_eda_baseline.ipynb`)
 
-- Data overview, memory footprint, missing and constant columns, time coverage.
-- Target behaviour: distribution, tails, autocorrelation and regime changes over time.
-- Market features: distributions, correlation with the target, order-book and trade-flow imbalance.
-- Anonymized features: correlation with the target, redundancy between features, drift between train and test.
-- Baselines evaluated on a **chronological** holdout (last 20% of the training period) with a one-day gap before it,
+The notebook follows the course structure: problem definition, data overview, exploratory data analysis (target,
+market features, anonymized features, outliers, train/test drift, time structure), preprocessing, baseline models,
+Kaggle submission and conclusion. Every plot is followed by a written interpretation.
+
+- Baselines are evaluated on a **chronological** holdout (last 20% of the training period) with a one-day gap before it,
   never a shuffled split, because the target is a future price move and stays autocorrelated for about an hour.
-- Memory kept within a free Google Colab runtime: parquet files are read in column groups, feature matrices are
+- Memory is kept within a free Google Colab runtime: parquet files are read in column groups, feature matrices are
   built once per split in row-major order, and ridge is solved by Cholesky in float64 (in float32 the Gram matrix of
   these collinear features is not positive definite and scikit-learn falls back to a full SVD needing over 10 GB).
 
@@ -49,7 +61,7 @@ The 780 `X*` columns are proprietary DRW features with no documentation.
 
 ### Assignment 2: proposed solution (`assignment2_solution.ipynb`)
 
-Due in the third week of December. It will build on the findings and baselines of Assignment 1.
+Due 30 December 2026. It will build on the findings and baselines of Assignment 1.
 
 ## Results
 
@@ -65,7 +77,7 @@ holdout and on the private score, LightGBM on the public score. Both stay below 
 
 Main findings of the EDA (details and plots in the notebook):
 
-- The data is clean: no missing values, no constant columns, no duplicate timestamps. The minute grid is 99.8% complete
+- The data is clean: no missing or infinite values, no constant columns, no duplicate rows or timestamps. The minute grid is 99.8% complete
   (273 gaps, 1,154 missing minutes, the longest 35 minutes).
 - `label` is heavy-tailed (kurtosis 16) and strongly autocorrelated (0.98 at 1 minute, 0.61 at 30 minutes, about 0 at 1 day),
   so a shuffled split leaks the future. All validation is chronological.
@@ -82,6 +94,7 @@ Kaggle API credential (from Kaggle > Settings > API: either the `kaggle.json` fi
 token) and downloads the competition data. You must have accepted the competition rules on Kaggle.
 
 **Locally.** Dependencies are managed with [uv](https://docs.astral.sh/uv/) (`pyproject.toml` + `uv.lock`).
+Without uv, `pip install -r requirements.txt` installs the same packages and the commands below run without the `uv run` prefix.
 
 The Kaggle CLI reads your credential from `~/.kaggle/kaggle.json` or `~/.kaggle/access_token`.
 
@@ -104,6 +117,8 @@ on synthetic data.
 | 2026-11-04 | Repository structure, uv project, `src` modules (data loading, chronological split, baseline registry, metric), smoke test |
 | 2026-11-05 | EDA notebook and `src/eda.py` helpers: data quality, target behaviour, market and anonymized features, train/test drift, time patterns |
 | 2026-11-06 | Baselines added to the notebook, holdout evaluation, late submissions to Kaggle, results written up |
+| 2026-11-08 | Tested in Google Colab and reduced memory use: column-wise loading, row-first sampling, float64 Cholesky ridge |
+| 2026-11-11 | Notebook reorganized into the course structure, written interpretation after every plot, outlier analysis and preprocessing section added, `requirements.txt` |
 
 ## Kaggle submission history
 

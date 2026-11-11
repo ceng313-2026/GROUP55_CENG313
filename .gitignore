@@ -221,7 +221,7 @@ __marimo__/
 
 # Competition data and generated submissions
 data/
-submissions/
+submissions/*.csv
 
 # Kaggle credentials, never commit
 kaggle.json
